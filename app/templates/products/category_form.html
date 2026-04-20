@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set title = title %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white pt-4 px-4">
+                <h4 class="fw-bold mb-0"><i class="fas fa-tag me-2 text-primary"></i>{{ title }}</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên Danh Mục</label>
+                        {{ form.name(class="form-control rounded-3", placeholder="Ví dụ: Bút bi, Giấy A4...") }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Danh Mục Cha</label>
+                        {{ form.parent_id(class="form-select rounded-3") }}
+                        <div class="form-text">Dùng để phân cấp danh mục (Ví dụ: Bút bi nằm trong Bút các loại).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Icon (FontAwesome)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-icons"></i></span>
+                            {{ form.icon(class="form-control", placeholder="fa-box, fa-pen, fa-book...") }}
+                        </div>
+                        <div class="form-text">Nhập class FontAwesome (ví dụ: fa-pen-nib).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả</label>
+                        {{ form.description(class="form-control rounded-3", rows="3", placeholder="Mô tả ngắn gọn về danh mục...") }}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('products.list_categories') }}" class="btn btn-light px-4">Hủy</a>
+                        {{ form.submit(class="btn btn-primary px-5") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

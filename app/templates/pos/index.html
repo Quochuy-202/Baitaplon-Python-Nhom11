@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Bán Hàng - {{ store_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── TOP BAR ─────────────────────────── */
+        #pos-topbar {
+            background: #1565C0;
+            color: #fff;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        #pos-topbar .brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #pos-topbar .info-chip {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+        }
+        #pos-topbar .ms-auto { margin-left: auto !important; }
+
+        /* ─── LAYOUT ──────────────────────────── */
+        #pos-layout {
+            display: flex;
+            height: calc(100vh - 54px);
+        }
+
+        /* Left panel */
+        #pos-left {
+            flex: 1 1 60%;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        /* Barcode / Search */
+        #pos-search-bar {
+            display: flex;
+            gap: 10px;
+        }
+        #barcode-input {
+            font-size: 1.1rem;
+            padding: 10px 16px;
+            border: 2px solid #1E88E5;
+            border-radius: 8px;
+            flex: 1;
+        }
+        #barcode-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(30,136,229,0.2); }
+
+        /* Product Grid */
+        #product-grid {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            padding-bottom: 8px;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .product-card:hover {
+            border-color: #1E88E5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30,136,229,0.18);
+        }
+        .product-card .prod-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 8px 0 4px;
+            line-height: 1.3;
+            color: #333;
+        }
+        .product-card .prod-price {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1565C0;
+        }
+        .product-card .prod-stock {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 2px;
+        }
+        .product-card .prod-icon {
+            font-size: 2rem;
+            color: #90CAF9;
+        }
+
+        /* No result state */
+        #no-result {
+            display: none;
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+
+        /* ─── RIGHT PANEL (CART) ──────────────── */
+        #pos-right {
+            width: 380px;
+            flex-shrink: 0;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e0e7ef;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.05);
+        }
+
+        #cart-header {
+            background: #1565C0;
+            color: #fff;
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* Cart Items list */
+        #cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            gap: 10px;
+            border-bottom: 1px solid #f0f4f8;
+            transition: background 0.15s;
+        }
+        .cart-item:hover { background: #f7faff; }
+        .cart-item-name { flex: 1; font-size: 0.85rem; font-weight: 600; color: #333; }
+        .cart-item-price { font-size: 0.8rem; color: #777; }
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .qty-btn {
+            width: 26px;
+            height: 26px;
+            border: 1px solid #dee2e6;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+        .qty-btn:hover { background: #1E88E5; color: #fff; border-color: #1E88E5; }
+        .qty-display { min-width: 28px; text-align: center; font-weight: 700; font-size: 0.9rem; }
+        .remove-btn { color: #dc3545; cursor: pointer; font-size: 0.85rem; padding: 4px; }
+        .remove-btn:hover { color: #a71d2a; }
+        .cart-item-total { font-weight: 700; font-size: 0.85rem; color: #1565C0; min-width: 72px; text-align: right; }
+
+        /* Cart empty state */
+        #cart-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #bbb;
+            font-size: 0.9rem;
+            gap: 10px;
+        }
+
+        /* Totals section */
+        #cart-totals {
+            padding: 14px 20px;
+            border-top: 2px solid #e0e7ef;
+            background: #f8fafd;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        .totals-row.grand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1565C0;
+            border-top: 2px solid #1565C0;
+            padding-top: 10px;
+            margin-top: 6px;
+        }
+
+        /* Payment buttons */
+        #cart-actions {
+            padding: 14px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        #btn-checkout {
+            grid-column: 1 / -1;
+            background: #1565C0;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #btn-checkout:hover { background: #0d47a1; }
+        #btn-checkout:disabled { background: #90a4ae; cursor: not-allowed; }
+
+        .action-btn-sm {
+            background: #fff;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .action-btn-sm:hover { border-color: #1E88E5; color: #1E88E5; }
+        #btn-clear { color: #dc3545; }
+        #btn-clear:hover { border-color: #dc3545; color: #dc3545; }
+
+        /* Search dropdown results */
+        #search-results {
+            position: absolute;
+            z-index: 1000;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            top: 48px;
+            left: 0;
+            right: 0;
+        }
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f4f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-result-item:hover { background: #f0f7ff; }
+        .search-result-item:last-child { border-bottom: none; }
+
+        /* Payment Modal */
+        .payment-method-btn {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        .payment-method-btn.selected {
+            border-color: #1E88E5;
+            background: #e3f2fd;
+            color: #1565C0;
+        }
+        .payment-method-btn i { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+        .payment-method-btn span { font-size: 0.8rem; font-weight: 600; }
+
+        #change-display {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2e7d32;
+            text-align: center;
+            display: none;
+        }
+        #change-display.negative { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div id="pos-topbar">
+    <div class="brand">
+        <i class="fas fa-store"></i>
+        <span>{{ store_name }}</span>
+    </div>
+    <div class="info-chip"><i class="fas fa-user me-1"></i>{{ current_user.full_name or current_user.username }}</div>
+    <div class="info-chip"><i class="fas fa-clock me-1"></i><span id="clock"></span></div>
+    <div class="ms-auto">
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-sm btn-outline-light me-2">
+            <i class="fas fa-th-large me-1"></i>Quản lý
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light">
+            <i class="fas fa-sign-out-alt"></i>
+        </a>
+    </div>
+</div>
+
+<!-- POS Layout -->
+<div id="pos-layout">
+
+    <!-- ── LEFT: Search + Products ── -->
+    <div id="pos-left">
+        <!-- Search Bar -->
+        <div id="pos-search-bar" style="position:relative;">
+            <input type="text" id="barcode-input" placeholder="🔍  Quét mã vạch hoặc gõ tên sản phẩm..." autofocus autocomplete="off">
+            <div id="search-results"></div>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="product-grid">
+            <div id="no-result">
+                <i class="fas fa-search fa-3x mb-2"></i>
+                <div>Không tìm thấy sản phẩm</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT: Cart ── -->
+    <div id="pos-right">
+        <div id="cart-header">
+            <span><i class="fas fa-shopping-cart me-2"></i>Giỏ Hàng</span>
+            <span id="cart-count-badge" class="badge bg-warning text-dark">0</span>
+        </div>
+
+        <!-- Empty state shown when cart is empty -->
+        <div id="cart-empty">
+            <i class="fas fa-shopping-basket fa-3x"></i>
+            <span>Chưa có sản phẩm nào</span>
+            <small class="text-center px-4">Quét mã vạch hoặc click sản phẩm để thêm vào đơn</small>
+        </div>
+
+        <!-- Item list (hidden when empty) -->
+        <div id="cart-items" style="display:none;"></div>
+
+        <!-- Totals -->
+        <div id="cart-totals" style="display:none;">
+            <div class="totals-row">
+                <span class="text-muted">Tạm tính</span>
+                <span id="subtotal-display">0 ₫</span>
+            </div>
+            <div class="totals-row">
+                <span class="text-muted">Chiết khấu</span>
+                <span id="discount-display" class="text-danger">0 ₫</span>
+            </div>
+            <div class="totals-row grand">
+                <span>TỔNG CỘNG</span>
+                <span id="total-display">0 ₫</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="cart-actions">
+            <button class="action-btn-sm" id="btn-clear" onclick="clearCart()">
+                <i class="fas fa-trash"></i> Xóa đơn
+            </button>
+            <button class="action-btn-sm" onclick="holdOrder()">
+                <i class="fas fa-pause"></i> Giữ đơn
+            </button>
+            <button id="btn-checkout" onclick="openPaymentModal()" disabled>
+                <i class="fas fa-money-bill-wave me-2"></i>THANH TOÁN
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── PAYMENT MODAL ── -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-money-bill-wave me-2"></i>Thanh Toán</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Total due -->
+                <div class="text-center mb-4">
+                    <div class="text-muted small mb-1">SỐ TIỀN CẦN THU</div>
+                    <div class="display-6 fw-bold text-primary" id="modal-total">0 ₫</div>
+                </div>
+
+                <!-- Payment methods -->
+                <div class="mb-4">
+                    <div class="text-muted small fw-semibold mb-2">PHƯƠNG THỨC THANH TOÁN</div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="payment-method-btn selected" onclick="selectPayment('cash')" id="pay-cash">
+                                <i class="fas fa-money-bill text-success"></i>
+                                <span>Tiền mặt</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="payment-method-btn" onclick="selectPayment('card')" id="pay-card">
+                                <i class="fas fa-credit-card text-primary"></i>
+                                <span>Thẻ / POS</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="payment-method-btn" onclick="selectPayment('qr')" id="pay-qr">
+                                <i class="fas fa-qrcode text-dark"></i>
+                                <span>QR Code</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amount paid input (cash only) -->
+                <div id="cash-section">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">KHÁCH ĐƯA</label>
+                        <div class="input-group input-group-lg">
+                            <input type="number" id="amount-paid-input" class="form-control fw-bold text-center fs-4"
+                                   placeholder="0" oninput="calcChange()">
+                            <span class="input-group-text fw-bold">₫</span>
+                        </div>
+                    </div>
+                    <!-- Quick cash buttons -->
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setQuickAmount(10000)">10K</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setQuickAmount(20000)">20K</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setQuickAmount(50000)">50K</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setQuickAmount(100000)">100K</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setQuickAmount(200000)">200K</button>
+                        <button class="btn btn-outline-secondary btn-sm flex-grow-1" onclick="setExactAmount()">Đủ tiền</button>
+                    </div>
+                    <!-- Change display -->
+                    <div id="change-display">Tiền thừa: <span id="change-amount">0</span> ₫</div>
+                </div>
+
+                <!-- QR Section (shown when QR selected) -->
+                <div id="qr-section" style="display:none; text-align:center;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Yêu cầu khách quét QR để thanh toán.
+                    </div>
+                    <p class="text-muted small">Khi khách đã thanh toán xong, nhấn "Xác nhận đã nhận tiền" bên dưới.</p>
+                </div>
+
+                <!-- Card Section -->
+                <div id="card-section" style="display:none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-credit-card me-2"></i>Vui lòng quẹt thẻ trên máy POS rời. Sau khi thẻ thành công, nhấn Xác nhận.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success btn-lg fw-bold flex-grow-1" id="btn-confirm-pay" onclick="confirmPayment()">
+                    <i class="fas fa-check me-2"></i>XÁC NHẬN THANH TOÁN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── SUCCESS MODAL ── -->
+<div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow text-center p-4">
+            <div class="text-success mb-3" style="font-size:4rem;">✓</div>
+            <h5 class="fw-bold">Thanh Toán Thành Công!</h5>
+            <div class="text-muted mb-3" id="success-order-code"></div>
+            <div class="bg-light rounded p-3 mb-3">
+                <div class="text-muted small">Tiền thừa trả khách</div>
+                <div class="fs-3 fw-bold text-success" id="success-change"></div>
+            </div>
+            <button class="btn btn-primary w-100 fw-bold" onclick="newOrder()">
+                <i class="fas fa-plus me-2"></i>Đơn Hàng Mới
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let cart = [];
+let selectedPayment = 'cash';
+let searchTimer = null;
+let allProducts = [];  // cached product data from last search
+
+// ─── CLOCK ──────────────────────────────────────────────────────────────────
+function updateClock() {
+    const now = new Date();
+    const s = now.toLocaleTimeString('vi-VN');
+    document.getElementById('clock').textContent = s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── PRODUCT SEARCH ─────────────────────────────────────────────────────────
+const searchInput = document.getElementById('barcode-input');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        const val = searchInput.value.trim();
+        if (val) searchProducts(val);
+    }
+});
+
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const val = searchInput.value.trim();
+    if (val.length < 1) { searchResults.style.display = 'none'; return; }
+    searchTimer = setTimeout(() => searchProducts(val), 350);
+});
+
+async function searchProducts(term) {
+    try {
+        const res = await fetch('/products/api/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify({ term })
+        });
+        const data = await res.json();
+        displaySearchResults(data);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function displaySearchResults(products) {
+    if (!products.length) {
+        searchResults.style.display = 'none';
+        return;
+    }
+    searchResults.innerHTML = products.map(p => `
+        <div class="search-result-item" onclick='addToCartFromSearch(${JSON.stringify(p)})'>
+            <div>
+                <div class="fw-semibold">${p.name}</div>
+                <div class="text-muted small">Tồn: ${p.stock}</div>
+            </div>
+            <span class="fw-bold text-primary">${formatVND(p.price)}</span>
+        </div>
+    `).join('');
+    searchResults.style.display = 'block';
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('#pos-search-bar')) {
+        searchResults.style.display = 'none';
+    }
+});
+
+function addToCartFromSearch(product) {
+    searchResults.style.display = 'none';
+    searchInput.value = '';
+    searchInput.focus();
+    addToCart(product);
+}
+
+// ─── PRODUCT GRID (load on start) ────────────────────────────────────────────
+async function loadProductGrid(term = '') {
+    try {
+        const res = await fetch('/products/api/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify({ term: term || ' ' })   // space => broader search
+        });
+        const products = await res.json();
+        allProducts = products;
+        renderProductGrid(products);
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function renderProductGrid(products) {
+    const grid = document.getElementById('product-grid');
+    const noResult = document.getElementById('no-result');
+
+    if (!products.length) {
+        grid.innerHTML = '';
+        grid.appendChild(noResult);
+        noResult.style.display = 'block';
+        return;
+    }
+    noResult.style.display = 'none';
+
+    grid.innerHTML = products.map(p => `
+        <div class="product-card" onclick='addToCart(${JSON.stringify(p)})' title="${p.name}">
+            <div class="prod-icon"><i class="fas fa-box"></i></div>
+            <div class="prod-name">${p.name}</div>
+            <div class="prod-price">${formatVND(p.price)}</div>
+            <div class="prod-stock">Còn: ${p.stock}</div>
+        </div>
+    `).join('');
+}
+
+// ─── CART FUNCTIONS ──────────────────────────────────────────────────────────
+function addToCart(product) {
+    const existing = cart.find(item => item.id === product.id);
+    if (existing) {
+        if (existing.quantity >= product.stock) {
+            alert(`Chỉ còn ${product.stock} sản phẩm trong kho!`);
+            return;
+        }
+        existing.quantity++;
+    } else {
+        if (product.stock < 1) {
+            alert('Sản phẩm đã hết hàng!');
+            return;
+        }
+        cart.push({ ...product, quantity: 1 });
+    }
+    renderCart();
+}
+
+function updateQty(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+    item.quantity += delta;
+    if (item.quantity <= 0) {
+        removeFromCart(id);
+    } else {
+        renderCart();
+    }
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(i => i.id !== id);
+    renderCart();
+}
+
+function clearCart() {
+    if (cart.length > 0 && !confirm('Xóa toàn bộ đơn hàng hiện tại?')) return;
+    cart = [];
+    renderCart();
+    searchInput.focus();
+}
+
+function holdOrder() {
+    if (!cart.length) return;
+    alert('Tính năng giữ đơn sẽ được cập nhật ở phiên bản sau.');
+}
+
+function renderCart() {
+    const cartItems = document.getElementById('cart-items');
+    const cartEmpty = document.getElementById('cart-empty');
+    const cartTotals = document.getElementById('cart-totals');
+    const btnCheckout = document.getElementById('btn-checkout');
+    const countBadge = document.getElementById('cart-count-badge');
+
+    const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+    countBadge.textContent = totalItems;
+
+    if (!cart.length) {
+        cartEmpty.style.display = 'flex';
+        cartItems.style.display = 'none';
+        cartTotals.style.display = 'none';
+        btnCheckout.disabled = true;
+        return;
+    }
+
+    cartEmpty.style.display = 'none';
+    cartItems.style.display = 'block';
+    cartTotals.style.display = 'block';
+    btnCheckout.disabled = false;
+
+    cartItems.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <div class="flex-grow-1">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">${formatVND(item.price)} / SP</div>
+            </div>
+            <div class="qty-control">
+                <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+                <span class="qty-display">${item.quantity}</span>
+                <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+            </div>
+            <div class="cart-item-total">${formatVND(item.price * item.quantity)}</div>
+            <i class="fas fa-times remove-btn" onclick="removeFromCart(${item.id})"></i>
+        </div>
+    `).join('');
+
+    const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    document.getElementById('subtotal-display').textContent = formatVND(subtotal);
+    document.getElementById('discount-display').textContent = '0 ₫';
+    document.getElementById('total-display').textContent = formatVND(subtotal);
+}
+
+// ─── PAYMENT ─────────────────────────────────────────────────────────────────
+function openPaymentModal() {
+    if (!cart.length) return;
+    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    document.getElementById('modal-total').textContent = formatVND(total);
+    document.getElementById('amount-paid-input').value = '';
+    document.getElementById('change-display').style.display = 'none';
+    selectPayment('cash');
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+function selectPayment(method) {
+    selectedPayment = method;
+    ['cash', 'card', 'qr'].forEach(m => {
+        document.getElementById('pay-' + m).classList.toggle('selected', m === method);
+    });
+    document.getElementById('cash-section').style.display = method === 'cash' ? 'block' : 'none';
+    document.getElementById('qr-section').style.display = method === 'qr' ? 'block' : 'none';
+    document.getElementById('card-section').style.display = method === 'card' ? 'block' : 'none';
+    if (method === 'cash') document.getElementById('amount-paid-input').focus();
+}
+
+function calcChange() {
+    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    const paid = parseFloat(document.getElementById('amount-paid-input').value) || 0;
+    const change = paid - total;
+    const el = document.getElementById('change-display');
+    el.style.display = paid > 0 ? 'block' : 'none';
+    document.getElementById('change-amount').textContent = formatVND(Math.abs(change));
+    el.className = 'change-display' + (change < 0 ? ' negative' : '');
+    el.innerHTML = change >= 0
+        ? `Tiền thừa: <span id="change-amount">${formatVND(change)}</span>`
+        : `Còn thiếu: <span id="change-amount">${formatVND(Math.abs(change))}</span>`;
+}
+
+function setQuickAmount(amount) {
+    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    // Round up to nearest quick amount
+    const rounded = Math.ceil(total / amount) * amount;
+    document.getElementById('amount-paid-input').value = rounded;
+    calcChange();
+}
+
+function setExactAmount() {
+    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    document.getElementById('amount-paid-input').value = total;
+    calcChange();
+}
+
+async function confirmPayment() {
+    const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    let amountPaid = total;
+
+    if (selectedPayment === 'cash') {
+        amountPaid = parseFloat(document.getElementById('amount-paid-input').value) || 0;
+        if (amountPaid < total) {
+            alert('Số tiền khách đưa chưa đủ!');
+            return;
+        }
+    }
+
+    const payload = {
+        items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
+        payment_method: selectedPayment,
+        amount_paid: amountPaid
+    };
+
+    try {
+        document.getElementById('btn-confirm-pay').disabled = true;
+        const res = await fetch('/pos/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+            document.getElementById('success-order-code').textContent = 'Mã HĐ: ' + result.order_code;
+            document.getElementById('success-change').textContent = formatVND(amountPaid - total);
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+        } else {
+            alert('Lỗi: ' + result.message);
+        }
+    } catch (e) {
+        alert('Lỗi kết nối: ' + e.message);
+    } finally {
+        document.getElementById('btn-confirm-pay').disabled = false;
+    }
+}
+
+function newOrder() {
+    bootstrap.Modal.getInstance(document.getElementById('successModal')).hide();
+    cart = [];
+    renderCart();
+    loadProductGrid();
+    searchInput.focus();
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function formatVND(num) {
+    return new Intl.NumberFormat('vi-VN').format(Math.round(num)) + ' ₫';
+}
+
+function getCsrf() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.content;
+    // Fallback: extract from cookie
+    const match = document.cookie.match(/csrf_token=([^;]+)/);
+    return match ? match[1] : '';
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadProductGrid();
+searchInput.focus();
+</script>
+</body>
+</html>

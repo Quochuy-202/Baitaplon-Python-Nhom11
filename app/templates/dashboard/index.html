@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% set title = "Dashboard" %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm overflow-hidden" style="background: linear-gradient(135deg, rgba(21, 101, 192, 0.8) 0%, rgba(30, 136, 229, 0.6) 100%), url('{{ url_for('static', filename='img/hero.png') }}'); background-size: cover; background-position: center; height: 160px;">
+            <div class="card-body d-flex align-items-center p-4">
+                <div class="text-white">
+                    <h3 class="fw-bold mb-1">Chào buổi chiều, {{ current_user.full_name or current_user.username }}!</h3>
+                    <p class="mb-0 opacity-75">Hôm nay cửa hàng của bạn đang hoạt động rất tốt. Kiểm tra các số liệu bên dưới nhé.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Doanh thu hôm nay -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-stat border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">DOANH THU HÔM NAY</div>
+                    <div class="fs-4 fw-bold text-dark">{{ "{:,.0f}".format(today_revenue) }} ₫</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Đơn hàng -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-stat border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="icon-box bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">ĐƠN HÀNG HÔM NAY</div>
+                    <div class="fs-4 fw-bold text-dark">{{ today_orders }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Cảnh báo kho -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-stat border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">HÀNG SẮP HẾT</div>
+                    <div class="fs-4 fw-bold text-dark">{{ count_low_stock }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tổng SP -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-stat border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 p-4">
+                <div class="icon-box bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">SHORTCUT</div>
+                    <a href="{{ url_for('pos.index') }}" class="btn btn-sm btn-primary mt-1 fw-bold">
+                        <i class="fas fa-cash-register me-1"></i> Mở POS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts & Tables Row -->
+<div class="row g-4">
+    <!-- Biều đồ doanh thu 7 ngày -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h6 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Doanh Thu 7 Ngày Gần Nhất</h6>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <canvas id="revenueChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hàng sắp hết kho -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Cảnh Báo Tồn Kho</h6>
+                <a href="{{ url_for('products.list_products') }}" class="btn btn-sm btn-outline-warning">Xem tất cả</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for p in low_stock_products %}
+                    <li class="list-group-item border-0 px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold small">{{ p.name }}</div>
+                                <div class="text-muted x-small">Tối thiểu: {{ p.min_stock }}</div>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">Còn {{ p.stock_quantity }}</span>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item border-0 px-4 py-4 text-center text-success">
+                        <i class="fas fa-check-circle me-2"></i>Kho hàng ổn định!
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top bán chạy tháng này -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h6 class="fw-bold text-dark mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top Sản Phẩm Bán Chạy Tháng Này</h6>
+            </div>
+            <div class="card-body px-4 pb-4">
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th class="text-end">Số Lượng Bán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rank, (name, qty) in enumerate(top_products, 1) %}
+                            <tr>
+                                <td>
+                                    {% if rank == 1 %}<span class="badge bg-warning text-dark">🥇 {{ rank }}</span>
+                                    {% elif rank == 2 %}<span class="badge bg-secondary">🥈 {{ rank }}</span>
+                                    {% elif rank == 3 %}<span class="badge bg-danger">🥉 {{ rank }}</span>
+                                    {% else %}<span class="text-muted">{{ rank }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-semibold">{{ name }}</td>
+                                <td class="text-end"><span class="badge bg-primary rounded-pill">{{ qty }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
+                    <p>Chưa có dữ liệu bán hàng tháng này.</p>
+                    <a href="{{ url_for('pos.index') }}" class="btn btn-primary btn-sm">Bắt đầu bán hàng</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ dates | tojson }},
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: {{ revenues | tojson }},
+                backgroundColor: 'rgba(30, 136, 229, 0.15)',
+                borderColor: '#1E88E5',
+                borderWidth: 2,
+                borderRadius: 6,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => new Intl.NumberFormat('vi-VN').format(ctx.raw) + ' ₫'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: v => new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(v) + '₫'
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}

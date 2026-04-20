@@ -1,0 +1,102 @@
+/* main.css */
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+#wrapper {
+    overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin 0.25s ease-out;
+    width: 15rem;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+}
+
+body.toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+
+    body.toggled #sidebar-wrapper {
+        margin-left: -15rem;
+    }
+}
+
+.list-group-item {
+    border: none;
+    padding: 15px 20px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover, .list-group-item.active {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-left: 4px solid white;
+}
+
+/* Primary blue */
+.bg-primary {
+    background-color: #1565C0 !important;
+}
+
+.text-primary {
+    color: #1565C0 !important;
+}
+
+.btn-primary {
+    background-color: #1E88E5;
+    border-color: #1E88E5;
+}
+
+.btn-primary:hover {
+    background-color: #1565C0;
+    border-color: #1565C0;
+}
+
+/* Card stats */
+.card-stat {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+}
+
+.card-stat:hover {
+    transform: translateY(-5px);
+}
+
+.card-stat .icon-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}

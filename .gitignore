@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Flask/SQLAlchemy
+instance/
+.webassets-cache
+vanphongpham_db.sqlite3
+
+# Git Ignore Markdown as requested
+*.md
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

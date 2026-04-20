@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% set title = title %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-box me-2 text-primary"></i>{{ title }}</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('products.list_products') }}">Hàng hóa</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Quay lại
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom pt-4 px-4 pb-3">
+                <h6 class="fw-bold mb-0 text-dark">Thông Tin Sản Phẩm</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+
+                    <!-- Tên & Mã SKU -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">{{ form.name.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.name(class="form-control", placeholder="VD: Bút Bi Thiên Long TL-027") }}
+                            {% for e in form.name.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.sku.label.text }}</label>
+                            {{ form.sku(class="form-control", placeholder="Tự động nếu để trống") }}
+                        </div>
+                    </div>
+
+                    <!-- Mã vạch -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.barcode.label.text }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-barcode"></i></span>
+                            {{ form.barcode(class="form-control", placeholder="Mã vạch từ nhà sản xuất (hoặc để trống để tự sinh)") }}
+                        </div>
+                        <div class="form-text">Nếu để trống, hệ thống sẽ tự sinh mã vạch nội bộ.</div>
+                    </div>
+
+                    <!-- Danh mục & Đơn vị tính -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.category_id.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.category_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.unit_id.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.unit_id(class="form-select") }}
+                        </div>
+                    </div>
+
+                    <!-- Mô tả -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.description.label.text }}</label>
+                        {{ form.description(class="form-control", rows=3, placeholder="Mô tả ngắn về sản phẩm...") }}
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-tag me-2"></i>Thông Tin Giá</h6>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.cost_price.label.text }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.cost_price(class="form-control", placeholder="0") }}
+                                <span class="input-group-text bg-light">₫</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.retail_price.label.text }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.retail_price(class="form-control", placeholder="0") }}
+                                <span class="input-group-text bg-light">₫</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.wholesale_price.label.text }}</label>
+                            <div class="input-group">
+                                {{ form.wholesale_price(class="form-control", placeholder="0") }}
+                                <span class="input-group-text bg-light">₫</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-warehouse me-2"></i>Tồn Kho & Vị Trí</h6>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.stock_quantity.label.text }}</label>
+                            {{ form.stock_quantity(class="form-control") }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.min_stock.label.text }}</label>
+                            {{ form.min_stock(class="form-control") }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.max_stock.label.text }}</label>
+                            {{ form.max_stock(class="form-control") }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.location.label.text }}</label>
+                            {{ form.location(class="form-control", placeholder="VD: Kệ A2") }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('products.list_products') }}" class="btn btn-outline-secondary px-4">Hủy</a>
+                        {{ form.submit(class="btn btn-primary px-5 fw-bold") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
