@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set title = "Nhập Hàng" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-file-import me-2 text-primary"></i>Nhập Hàng</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Nhập hàng</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{{ url_for('inventory.create_purchase_order') }}" class="btn btn-primary fw-bold rounded-pill px-4">
+        <i class="fas fa-plus me-2"></i>Tạo Phiếu Nhập
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Mã Phiếu</th>
+                        <th>Nhà Cung Cấp</th>
+                        <th>Ngày Nhập</th>
+                        <th class="text-end">Tổng Tiền</th>
+                        <th class="text-end">Đã Trả</th>
+                        <th class="text-end">Còn Nợ</th>
+                        <th class="text-center">Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">{{ o.order_code }}</td>
+                        <td>{{ o.supplier.name }}</td>
+                        <td>{{ o.order_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="text-end fw-bold">{{ "{:,.0f}".format(o.total_amount) }} ₫</td>
+                        <td class="text-end text-success">{{ "{:,.0f}".format(o.paid_amount) }} ₫</td>
+                        <td class="text-end text-danger">{{ "{:,.0f}".format(o.remaining_amount) }} ₫</td>
+                        <td class="text-center">
+                            <span class="badge bg-success-subtle text-success rounded-pill px-3">Hoàn tất</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fas fa-file-invoice fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0">Chưa có phiếu nhập hàng nào.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -36,10 +36,12 @@ class User(UserMixin, db.Model):
     audit_logs = db.relationship('AuditLog', backref='user', lazy='dynamic')
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        # Lưu mật khẩu trực tiếp không mã hóa
+        self.password_hash = password
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        # Kiểm tra mật khẩu trực tiếp
+        return self.password_hash == password
 
     def has_role(self, role_name):
         return self.role and self.role.name == role_name

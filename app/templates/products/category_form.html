@@ -3,47 +3,131 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-9 col-lg-8">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('products.list_categories') }}">Danh Mục</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white pt-4 px-4">
-                <h4 class="fw-bold mb-0"><i class="fas fa-tag me-2 text-primary"></i>{{ title }}</h4>
+            <div class="card-header bg-white pt-4 px-4 border-0">
+                <h4 class="fw-bold mb-0">
+                    <i class="fas fa-tag me-2 text-primary"></i>{{ title }}
+                </h4>
             </div>
             <div class="card-body p-4">
-                <form method="POST">
+                <form method="POST" id="categoryForm">
                     {{ form.hidden_tag() }}
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên Danh Mục</label>
-                        {{ form.name(class="form-control rounded-3", placeholder="Ví dụ: Bút bi, Giấy A4...") }}
-                        {% for error in form.name.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
+
+                    <div class="row g-4">
+                        <!-- Left: Icon Preview -->
+                        <div class="col-md-4 text-center">
+                            <div class="mb-2 fw-semibold text-muted small text-uppercase" style="letter-spacing:.05em;">Xem trước Icon</div>
+                            <div id="iconPreview"
+                                 class="rounded-circle d-inline-flex align-items-center justify-content-center shadow"
+                                 style="width:90px; height:90px; background:#1565C0;">
+                                <i id="previewIcon" class="fas fa-box text-white" style="font-size:2.2rem;"></i>
+                            </div>
+                            <div id="previewCatName" class="mt-3 fw-bold text-dark" style="font-size:1rem;">Tên danh mục</div>
+                        </div>
+
+                        <!-- Right: Form fields -->
+                        <div class="col-md-8">
+                            <!-- Tên danh mục -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tên Danh Mục <span class="text-danger">*</span></label>
+                                {{ form.name(class="form-control rounded-3", placeholder="Ví dụ: Bút bi, Giấy A4...", id="catNameInput") }}
+                                {% for error in form.name.errors %}
+                                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Danh mục cha -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Danh Mục Cha</label>
+                                {{ form.parent_id(class="form-select rounded-3") }}
+                                <div class="form-text"><i class="fas fa-info-circle me-1"></i>Để trống nếu đây là danh mục gốc.</div>
+                            </div>
+
+                            <!-- Mô tả -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Mô Tả</label>
+                                {{ form.description(class="form-control rounded-3", rows="3",
+                                   placeholder="Mô tả ngắn gọn về danh mục sản phẩm này...") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Icon Picker -->
+                    <hr class="my-4">
+                    <div class="mb-1 fw-semibold">Chọn Icon <span class="text-muted small fw-normal">(FontAwesome)</span></div>
+                    <div class="form-text mb-3"><i class="fas fa-info-circle me-1"></i>Nhập class icon thủ công hoặc nhấn một icon bên dưới để chọn nhanh.</div>
+
+                    <!-- Manual input -->
+                    <div class="input-group mb-3" style="max-width: 320px;">
+                        <span class="input-group-text bg-light">
+                            <i id="inputIconPreview" class="fas fa-box text-primary"></i>
+                        </span>
+                        {{ form.icon(class="form-control", placeholder="fa-pen, fa-box, fa-ruler...", id="iconInput") }}
+                    </div>
+
+                    <!-- Quick pick icons — Stationery themed -->
+                    <div class="mb-2 text-muted small fw-semibold text-uppercase" style="letter-spacing:.05em; font-size:.7rem;">Chọn nhanh:</div>
+                    <div class="d-flex flex-wrap gap-2" id="iconPicker">
+                        {% set icons = [
+                            ('fa-pen',           'Bút'),
+                            ('fa-pen-nib',       'Bút mực'),
+                            ('fa-marker',        'Marker'),
+                            ('fa-highlighter',   'Highlight'),
+                            ('fa-pencil',        'Bút chì'),
+                            ('fa-ruler',         'Thước'),
+                            ('fa-ruler-combined','Thước góc'),
+                            ('fa-eraser',        'Tẩy'),
+                            ('fa-scissors',      'Kéo'),
+                            ('fa-copy',          'Giấy tờ'),
+                            ('fa-file-alt',      'Tài liệu'),
+                            ('fa-file',          'File'),
+                            ('fa-folder-open',   'Folder'),
+                            ('fa-folder',        'Thư mục'),
+                            ('fa-book',          'Sách'),
+                            ('fa-book-open',     'Sách mở'),
+                            ('fa-bookmark',      'Bookmark'),
+                            ('fa-sticky-note',   'Ghi chú'),
+                            ('fa-paperclip',     'Kẹp giấy'),
+                            ('fa-thumbtack',     'Ghim'),
+                            ('fa-box',           'Hộp'),
+                            ('fa-boxes',         'Hộp nhiều'),
+                            ('fa-archive',       'Lưu trữ'),
+                            ('fa-print',         'In ấn'),
+                            ('fa-stapler',       'Dập ghim'),
+                            ('fa-tags',          'Nhãn'),
+                            ('fa-tag',           'Tag'),
+                            ('fa-shopping-bag',  'Túi'),
+                            ('fa-palette',       'Màu sắc'),
+                            ('fa-paint-brush',   'Cọ vẽ'),
+                        ] %}
+                        {% for icon_cls, icon_lbl in icons %}
+                        <button type="button"
+                                class="icon-pick-btn btn btn-light border d-flex flex-column align-items-center gap-1"
+                                data-icon="{{ icon_cls }}"
+                                title="{{ icon_lbl }}"
+                                style="width:62px; padding:8px 4px; border-radius:10px; font-size:.65rem; color:#555;">
+                            <i class="fas {{ icon_cls }}" style="font-size:1.3rem;"></i>
+                            <span>{{ icon_lbl }}</span>
+                        </button>
                         {% endfor %}
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Danh Mục Cha</label>
-                        {{ form.parent_id(class="form-select rounded-3") }}
-                        <div class="form-text">Dùng để phân cấp danh mục (Ví dụ: Bút bi nằm trong Bút các loại).</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Icon (FontAwesome)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="fas fa-icons"></i></span>
-                            {{ form.icon(class="form-control", placeholder="fa-box, fa-pen, fa-book...") }}
-                        </div>
-                        <div class="form-text">Nhập class FontAwesome (ví dụ: fa-pen-nib).</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Mô tả</label>
-                        {{ form.description(class="form-control rounded-3", rows="3", placeholder="Mô tả ngắn gọn về danh mục...") }}
-                    </div>
-
                     <hr class="my-4">
-
                     <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('products.list_categories') }}" class="btn btn-light px-4">Hủy</a>
+                        <a href="{{ url_for('products.list_categories') }}" class="btn btn-light px-4">
+                            <i class="fas fa-arrow-left me-2"></i>Hủy
+                        </a>
                         {{ form.submit(class="btn btn-primary px-5") }}
                     </div>
                 </form>
@@ -51,4 +135,65 @@
         </div>
     </div>
 </div>
+
+<script>
+const iconInput       = document.getElementById('iconInput');
+const previewIcon     = document.getElementById('previewIcon');
+const inputIconPrev   = document.getElementById('inputIconPreview');
+const previewCatName  = document.getElementById('previewCatName');
+const catNameInput    = document.getElementById('catNameInput');
+
+// Icon picker buttons
+document.querySelectorAll('.icon-pick-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const cls = this.dataset.icon;
+        iconInput.value = cls;
+        updatePreview(cls);
+        // Highlight selected
+        document.querySelectorAll('.icon-pick-btn').forEach(b => b.classList.remove('btn-primary', 'text-white', 'border-primary'));
+        this.classList.add('btn-primary', 'text-white', 'border-primary');
+    });
+});
+
+// Manual input
+iconInput.addEventListener('input', function () {
+    updatePreview(this.value.trim() || 'fa-box');
+});
+
+// Category name preview
+catNameInput.addEventListener('input', function () {
+    previewCatName.textContent = this.value || 'Tên danh mục';
+});
+
+function updatePreview(cls) {
+    // Remove all fa-* classes except fas
+    previewIcon.className = 'fas text-white';
+    inputIconPrev.className = 'fas text-primary';
+    if (cls) {
+        previewIcon.classList.add(cls);
+        inputIconPrev.classList.add(cls);
+    } else {
+        previewIcon.classList.add('fa-box');
+        inputIconPrev.classList.add('fa-box');
+    }
+}
+
+// On page load: set from current value
+window.addEventListener('DOMContentLoaded', () => {
+    const currentIcon = iconInput.value.trim();
+    const currentName = catNameInput.value.trim();
+
+    if (currentIcon) updatePreview(currentIcon);
+    if (currentName) previewCatName.textContent = currentName;
+
+    // Highlight matching button if any
+    if (currentIcon) {
+        document.querySelectorAll('.icon-pick-btn').forEach(btn => {
+            if (btn.dataset.icon === currentIcon) {
+                btn.classList.add('btn-primary', 'text-white', 'border-primary');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -1,5 +1,4 @@
 import os
-from werkzeug.security import generate_password_hash
 from app import create_app
 from app.extensions import db
 from app.models import Role, User, Category, Unit, Product, Barcode
@@ -20,10 +19,10 @@ def seed():
         db.session.add_all([r_admin, r_thungan, r_thukho])
         db.session.flush()
 
-        print("Seeding Users...")
-        u_admin = User(username='admin', password_hash=generate_password_hash('admin123'), full_name='Chủ Cửa Hàng', role_id=r_admin.id)
-        u_thungan = User(username='thungan', password_hash=generate_password_hash('123456'), full_name='Trần Thu Ngân', role_id=r_thungan.id)
-        u_thukho = User(username='thukho', password_hash=generate_password_hash('123456'), full_name='Lê Thủ Kho', role_id=r_thukho.id)
+        print("Seeding Users (Plain Text Passwords)...")
+        u_admin = User(username='admin', password_hash='admin123', full_name='Chủ Cửa Hàng', role_id=r_admin.id)
+        u_thungan = User(username='thungan', password_hash='123456', full_name='Trần Thu Ngân', role_id=r_thungan.id)
+        u_thukho = User(username='thukho', password_hash='123456', full_name='Lê Thủ Kho', role_id=r_thukho.id)
         db.session.add_all([u_admin, u_thungan, u_thukho])
 
         print("Seeding Units...")
@@ -73,7 +72,7 @@ def seed():
             db.session.add(bc)
 
         db.session.commit()
-        print("Data seeded successfully!")
+        print("Data seeded successfully with Plain Text Passwords!")
 
 if __name__ == '__main__':
     seed()

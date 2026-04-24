@@ -153,7 +153,7 @@ def create():
         flash('Đã thêm sản phẩm mới thành công.', 'success')
         return redirect(url_for('products.list_products'))
         
-    return render_template('products/form.html', form=form, title='Thêm Sản Phẩm Mới')
+    return render_template('products/form.html', form=form, title='Thêm Sản Phẩm Mới', categories=Category.query.all())
 
 @products_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -196,7 +196,7 @@ def edit(id):
         flash('Đã cập nhật thông tin sản phẩm.', 'success')
         return redirect(url_for('products.list_products'))
         
-    return render_template('products/form.html', form=form, title='Sửa Sản Phẩm')
+    return render_template('products/form.html', form=form, title='Sửa Sản Phẩm', categories=Category.query.all())
 
 @products_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
@@ -218,8 +218,19 @@ def api_lookup():
     data = request.get_json() or {}
     term = data.get('term', '').strip()
     
+    # Nếu term trống, trả về 20 sản phẩm mới nhất để grid không bị trống
     if not term:
-        return jsonify([])
+        products = Product.query.filter_by(is_active=True).order_by(Product.id.desc()).limit(20).all()
+        results = []
+        for p in products:
+            results.append({
+                'id': p.id,
+                'name': p.name,
+                'price': float(p.retail_price),
+                'stock': p.stock_quantity,
+                'barcode': p.primary_barcode
+            })
+        return jsonify(results)
         
     # Thử tìm theo mã vạch trước
     bc = Barcode.query.filter_by(barcode=term).first()

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% set title = title %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="fas fa-truck-moving me-2 text-primary"></i>{{ title }}</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('suppliers.index') }}">Nhà cung cấp</a></li>
+                        <li class="breadcrumb-item active">{{ title }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <a href="{{ url_for('suppliers.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                            {{ form.name(class="form-control rounded-3 py-2", placeholder="Nhập tên đơn vị cung cấp...") }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Người liên hệ</label>
+                            {{ form.contact_person(class="form-control rounded-3 py-2", placeholder="Tên nhân viên kinh doanh...") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Số điện thoại</label>
+                            {{ form.phone(class="form-control rounded-3 py-2", placeholder="09x xxxx xxx") }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email</label>
+                            {{ form.email(class="form-control rounded-3 py-2", placeholder="contact@supplier.com") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mã số thuế</label>
+                            {{ form.tax_code(class="form-control rounded-3 py-2", placeholder="MST...") }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Địa chỉ</label>
+                            {{ form.address(class="form-control rounded-3 py-2", rows="2", placeholder="Địa chỉ trụ sở...") }}
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-4 opacity-5">
+                            <label class="form-label fw-bold">Điều khoản thanh toán</label>
+                            {{ form.payment_terms(class="form-control rounded-3 py-2", rows="2", placeholder="Ví dụ: Thanh toán sau 30 ngày, Chuyển khoản...") }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Ghi chú</label>
+                            {{ form.notes(class="form-control rounded-3 py-2", rows="2", placeholder="Thông tin thêm...") }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5 d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary rounded-pill px-5 py-2 fw-bold flex-grow-1") }}
+                        <a href="{{ url_for('suppliers.index') }}" class="btn btn-light border rounded-pill px-5 py-2">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

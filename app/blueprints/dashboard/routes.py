@@ -10,17 +10,18 @@ from app.models import Order, Product, Customer
 @dashboard_bp.route('/')
 @login_required
 def index():
-    today = datetime.utcnow().date()
+    # Sử dụng datetime.now() để lấy giờ địa phương chính xác
+    today = datetime.now().date()
     
     # 1. Doanh thu hôm nay
     today_revenue = db.session.query(func.sum(Order.total_amount)).filter(
-        db.func.date(Order.order_date) == today,
+        func.date(Order.order_date) == today,
         Order.status == 'completed'
     ).scalar() or 0
     
     # 2. Tổng đơn hôm nay
     today_orders = Order.query.filter(
-        db.func.date(Order.order_date) == today,
+        func.date(Order.order_date) == today,
         Order.status == 'completed'
     ).count()
     
@@ -33,21 +34,27 @@ def index():
     
     # 4. Doanh thu 7 ngày qua (cho chart)
     seven_days_ago = today - timedelta(days=6)
+    
+    # Lấy dữ liệu thực tế từ DB
     sales_data = db.session.query(
-        db.func.date(Order.order_date).label('date'),
+        func.date(Order.order_date).label('date'),
         func.sum(Order.total_amount).label('total')
     ).filter(
-        db.func.date(Order.order_date) >= seven_days_ago,
+        func.date(Order.order_date) >= seven_days_ago,
         Order.status == 'completed'
-    ).group_by(db.func.date(Order.order_date)).all()
+    ).group_by(func.date(Order.order_date)).all()
+    
+    # Chuyển kết quả truy vấn thành dictionary để dễ tra cứu
+    sales_dict = {str(item.date): item.total for item in sales_data}
     
     dates = []
     revenues = []
-    # Điền các ngày trống
+    # Điền đầy đủ 7 ngày, kể cả ngày không có doanh thu
     for i in range(7):
         d = seven_days_ago + timedelta(days=i)
         dates.append(d.strftime('%d/%m'))
-        found = next((item.total for item in sales_data if item.date == d), 0)
+        # Tra cứu doanh thu trong dictionary, nếu không có thì bằng 0
+        found = sales_dict.get(str(d), 0)
         revenues.append(float(found))
 
     # 5. Top 5 SP bán chạy tháng này
@@ -56,10 +63,12 @@ def index():
     top_products = db.session.query(
         Product.name,
         func.sum(OrderItem.quantity).label('qty')
-    ).join(OrderItem.product).join(Order).filter(
+    ).join(OrderItem, Product.id == OrderItem.product_id)\
+     .join(Order, Order.id == OrderItem.order_id)\
+     .filter(
         Order.status == 'completed',
-        db.func.date(Order.order_date) >= start_of_month
-    ).group_by(Product.id).order_by(db.text('qty DESC')).limit(5).all()
+        func.date(Order.order_date) >= start_of_month
+    ).group_by(Product.id).order_by(db.desc('qty')).limit(5).all()
 
     return render_template('dashboard/index.html',
                            today_revenue=today_revenue,
@@ -68,4 +77,4 @@ def index():
                            dates=dates,
                            revenues=revenues,
                            top_products=top_products,
-                           low_stock_products=low_stock_products[:5]) # chỉ show 5 SP trên widget
+                           low_stock_products=low_stock_products[:5])

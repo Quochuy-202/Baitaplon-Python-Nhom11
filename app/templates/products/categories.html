@@ -2,68 +2,234 @@
 {% set title = "Danh Mục Sản Phẩm" %}
 
 {% block content %}
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3"><i class="fas fa-tags me-2 text-primary"></i>Danh Mục Hàng Hóa</h1>
-    <a href="{{ url_for('products.create_category') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i> Thêm Danh Mục
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-tags me-2 text-primary"></i>Danh Mục Hàng Hóa</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('products.list_products') }}">Hàng hóa</a></li>
+                <li class="breadcrumb-item active">Danh mục</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{{ url_for('products.create_category') }}" class="btn btn-primary fw-bold">
+        <i class="fas fa-plus me-2"></i>Thêm Danh Mục
     </a>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th width="80">Icon</th>
-                        <th>Tên Danh Mục</th>
-                        <th>Mô tả</th>
-                        <th>Danh mục cha</th>
-                        <th class="text-end">Sản phẩm</th>
-                        <th class="text-end">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cat in categories %}
-                    <tr>
-                        <td>
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                <i class="fas {{ cat.icon or 'fa-box' }}"></i>
-                            </div>
-                        </td>
-                        <td class="fw-bold">{{ cat.name }}</td>
-                        <td class="text-muted small text-truncate" style="max-width: 250px;">{{ cat.description or '-' }}</td>
-                        <td>
-                            {% if cat.parent %}
-                            <span class="badge bg-light text-dark border">{{ cat.parent.name }}</span>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end fw-bold text-primary">{{ cat.products.count() }}</td>
-                        <td class="text-end">
-                            <a href="{{ url_for('products.edit_category', id=cat.id) }}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="{{ url_for('products.delete_category', id=cat.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa danh mục này?')">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="fas fa-tags fa-3x mb-3 text-muted opacity-25"></i>
-                            <p class="text-muted">Chưa có danh mục nào được tạo.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Summary Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-primary">{{ categories | length }}</div>
+                <div class="text-muted small">Tổng Danh Mục</div>
+            </div>
+        </div>
+    </div>
+    {% set ns = namespace(total=0) %}
+    {% for cat in categories %}
+        {% set ns.total = ns.total + cat.products.count() %}
+    {% endfor %}
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-success">{{ ns.total }}</div>
+                <div class="text-muted small">Tổng Sản Phẩm</div>
+            </div>
+        </div>
+    </div>
+    {% set ns2 = namespace(has_desc=0) %}
+    {% for cat in categories %}
+        {% if cat.description %}{% set ns2.has_desc = ns2.has_desc + 1 %}{% endif %}
+    {% endfor %}
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-info">{{ ns2.has_desc }}</div>
+                <div class="text-muted small">Danh Mục Có Mô Tả</div>
+            </div>
+        </div>
+    </div>
+    {% set ns3 = namespace(has_parent=0) %}
+    {% for cat in categories %}
+        {% if cat.parent_id %}{% set ns3.has_parent = ns3.has_parent + 1 %}{% endif %}
+    {% endfor %}
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-warning">{{ ns3.has_parent }}</div>
+                <div class="text-muted small">Danh Mục Con</div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Category Cards Grid -->
+{% if categories %}
+<div class="row g-4">
+    {% for cat in categories %}
+    {% set count = cat.products.count() %}
+    {% set sample_products = cat.products.filter_by(is_active=True).limit(4).all() %}
+
+    <!-- Color palette based on index -->
+    {% if loop.index % 4 == 1 %}{% set color = '#1565C0' %}{% set bg = '#E3F2FD' %}
+    {% elif loop.index % 4 == 2 %}{% set color = '#2E7D32' %}{% set bg = '#E8F5E9' %}
+    {% elif loop.index % 4 == 3 %}{% set color = '#E65100' %}{% set bg = '#FFF3E0' %}
+    {% else %}{% set color = '#6A1B9A' %}{% set bg = '#F3E5F5' %}{% endif %}
+
+    <div class="col-md-6 col-xl-6">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; overflow: hidden;">
+
+            <!-- Card Header -->
+            <div class="card-header border-0 py-3 px-4" style="background: {{ bg }};">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                             style="width:52px; height:52px; background:{{ color }};">
+                            <i class="fas {{ cat.icon or 'fa-box' }} text-white fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color:{{ color }};">{{ cat.name }}</h5>
+                            {% if cat.parent %}
+                            <span class="badge bg-white border small" style="color:{{ color }};">
+                                <i class="fas fa-sitemap me-1"></i>{{ cat.parent.name }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-white border text-muted small">Danh mục gốc</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fs-3 fw-bold" style="color:{{ color }};">{{ count }}</div>
+                        <div class="text-muted small">sản phẩm</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body p-4">
+                <!-- Description -->
+                <p class="text-muted small mb-3">
+                    {% if cat.description %}
+                        <i class="fas fa-info-circle me-1 text-primary opacity-50"></i>{{ cat.description }}
+                    {% else %}
+                        <span class="fst-italic opacity-50">Chưa có mô tả. <a href="{{ url_for('products.edit_category', id=cat.id) }}">Thêm mô tả</a></span>
+                    {% endif %}
+                </p>
+
+                <!-- Sample Products Mini Grid -->
+                {% if sample_products %}
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:.05em;">
+                            <i class="fas fa-box me-1"></i>Sản phẩm trong danh mục
+                        </span>
+                        <a href="{{ url_for('products.list_products', category_id=cat.id) }}"
+                           class="text-primary small text-decoration-none fw-semibold">
+                            Xem tất cả <i class="fas fa-arrow-right ms-1" style="font-size:.7rem;"></i>
+                        </a>
+                    </div>
+
+                    <div class="row g-2">
+                        {% for p in sample_products %}
+                        <div class="col-6">
+                            <div class="d-flex align-items-center gap-2 p-2 rounded-3" style="background:#f8fafd;">
+                                <!-- Product image thumbnail -->
+                                <div class="rounded-2 overflow-hidden flex-shrink-0"
+                                     style="width:40px; height:40px; background:#e9ecef;">
+                                    {% if 'Bìa' in p.name or 'còng' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/bia_cong.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Thước' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/thuoc_ke.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Tẩy' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/tay_pentel.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Bi' in p.name and 'Bút' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/but_bi.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Gel' in p.name and 'Bút' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/but_gel.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Vở' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/vo_campus.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% elif 'Giấy' in p.name %}
+                                    <img src="{{ url_for('static', filename='img/products/giay_a4.png') }}"
+                                         class="w-100 h-100" style="object-fit:cover;" alt="{{ p.name }}">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center"
+                                         style="background:{{ bg }};">
+                                        <i class="fas {{ cat.icon or 'fa-box' }} small" style="color:{{ color }};"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-semibold text-truncate" style="font-size:.78rem;">{{ p.name }}</div>
+                                    <div class="text-primary" style="font-size:.72rem;">{{ "{:,.0f}".format(p.retail_price) }} ₫</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="border-top pt-3 text-center text-muted py-2">
+                    <i class="fas fa-box-open opacity-25 d-block mb-1"></i>
+                    <small>Chưa có sản phẩm nào.</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Card Footer: Actions -->
+            <div class="card-footer bg-white border-top-0 px-4 pb-4 pt-0">
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('products.list_products', category_id=cat.id) }}"
+                       class="btn btn-sm flex-grow-1 fw-semibold"
+                       style="background:{{ bg }}; color:{{ color }}; border: 1px solid {{ color }}20;">
+                        <i class="fas fa-list me-1"></i>Xem Sản Phẩm ({{ count }})
+                    </a>
+                    <a href="{{ url_for('products.edit_category', id=cat.id) }}"
+                       class="btn btn-sm btn-outline-secondary" title="Chỉnh sửa danh mục">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% if count == 0 %}
+                    <form action="{{ url_for('products.delete_category', id=cat.id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Xóa danh mục \'{{ cat.name }}\'?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa danh mục">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-danger" disabled
+                            title="Không thể xóa — đang có {{ count }} sản phẩm">
+                        <i class="fas fa-lock"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-tags fa-4x text-muted opacity-25 mb-4"></i>
+        <h5 class="fw-bold text-muted">Chưa có danh mục nào</h5>
+        <p class="text-muted">Hãy tạo danh mục đầu tiên để phân loại hàng hóa của bạn.</p>
+        <a href="{{ url_for('products.create_category') }}" class="btn btn-primary px-5">
+            <i class="fas fa-plus me-2"></i>Tạo Danh Mục Đầu Tiên
+        </a>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

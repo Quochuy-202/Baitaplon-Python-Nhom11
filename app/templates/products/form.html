@@ -55,13 +55,39 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">{{ form.category_id.label.text }} <span class="text-danger">*</span></label>
-                            {{ form.category_id(class="form-select") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light" id="cat-icon-container">
+                                    <i class="fas fa-tag text-primary"></i>
+                                </span>
+                                {{ form.category_id(class="form-select", id="category-select") }}
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">{{ form.unit_id.label.text }} <span class="text-danger">*</span></label>
                             {{ form.unit_id(class="form-select") }}
                         </div>
                     </div>
+
+                    <script>
+                        // Map icons to categories (simplified for JS)
+                        const categoryIcons = {
+                            {% for c in categories %}
+                            "{{ c.id }}": "{{ c.icon or 'fa-tag' }}",
+                            {% endfor %}
+                        };
+
+                        const catSelect = document.getElementById('category-select');
+                        const iconCont = document.getElementById('cat-icon-container');
+
+                        function updateCatIcon() {
+                            const catId = catSelect.value;
+                            const iconClass = categoryIcons[catId] || 'fa-tag';
+                            iconCont.innerHTML = `<i class="fas ${iconClass} text-primary"></i>`;
+                        }
+
+                        catSelect.addEventListener('change', updateCatIcon);
+                        window.addEventListener('load', updateCatIcon);
+                    </script>
 
                     <!-- Mô tả -->
                     <div class="mb-3">

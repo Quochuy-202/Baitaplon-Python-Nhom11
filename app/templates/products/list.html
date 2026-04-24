@@ -75,7 +75,10 @@
                         </td>
                         <td>
                             {% if p.category %}
-                            <span class="badge bg-primary bg-opacity-10 text-primary">{{ p.category.name }}</span>
+                            <span style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:700; background:#EFF6FF; color:#1565C0; border:1px solid #BFDBFE;">
+                                <i class="fas {{ p.category.icon or 'fa-box' }}" style="font-size:.65rem;"></i>
+                                {{ p.category.name }}
+                            </span>
                             {% else %}
                             <span class="text-muted">—</span>
                             {% endif %}
@@ -90,11 +93,11 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            <a href="{{ url_for('products.create') }}?edit={{ p.id }}" class="btn btn-sm btn-outline-primary me-1"
+                            <a href="{{ url_for('products.edit', id=p.id) }}" class="btn btn-sm btn-outline-primary me-1"
                                title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
                             <form action="{{ url_for('products.delete', id=p.id) }}" method="POST" class="d-inline"
                                   onsubmit="return confirm('Xóa sản phẩm này?')">
-                                <input type="hidden" name="_method" value="DELETE">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
                                     <i class="fas fa-trash"></i>
                                 </button>

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% set title = "Danh Sách Khách Hàng" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-users me-2 text-primary"></i>Khách Hàng</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Khách hàng</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{{ url_for('customers.create') }}" class="btn btn-primary fw-bold rounded-pill px-4">
+        <i class="fas fa-plus me-2"></i>Thêm Khách Hàng
+    </a>
+</div>
+
+<!-- Search & Filter -->
+<div class="card border-0 shadow-sm mb-4 rounded-4">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0 rounded-end-pill py-2" 
+                           placeholder="Tìm theo tên, số điện thoại, công ty..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4" style="width: 50px;">ID</th>
+                        <th>Khách Hàng</th>
+                        <th>Thông Tin Liên Hệ</th>
+                        <th class="text-center">Loại</th>
+                        <th class="text-center">Hạng Thẻ</th>
+                        <th class="text-end">Công Nợ</th>
+                        <th class="text-center" style="width: 120px;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="ps-4 text-muted small">#{{ c.id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ c.display_name }}</div>
+                            {% if c.customer_type == 'business' %}
+                            <div class="text-muted small"><i class="fas fa-user-tie me-1"></i>{{ c.name }} (Đại diện)</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div><i class="fas fa-phone-alt me-2 text-muted small"></i>{{ c.phone or '---' }}</div>
+                            <div class="text-muted small"><i class="fas fa-envelope me-2 text-muted small"></i>{{ c.email or '---' }}</div>
+                        </td>
+                        <td class="text-center">
+                            {% if c.customer_type == 'business' %}
+                            <span class="badge bg-info-subtle text-info rounded-pill px-3">Doanh nghiệp</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">Cá nhân</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-{{ c.card_level_badge() }} rounded-pill px-3">
+                                {{ c.card_level | upper }}
+                            </span>
+                        </td>
+                        <td class="text-end fw-bold {% if c.debt_amount > 0 %}text-danger{% else %}text-muted{% endif %}">
+                            {{ "{:,.0f}".format(c.debt_amount) }} ₫
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ url_for('customers.edit', id=c.id) }}" class="btn btn-sm btn-light border rounded-pill" title="Sửa">
+                                    <i class="fas fa-edit text-primary"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill" 
+                                        title="Xóa" data-bs-toggle="modal" data-bs-target="#deleteCustModal{{ c.id }}">
+                                    <i class="fas fa-trash text-danger"></i>
+                                </button>
+                            </div>
+
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteCustModal{{ c.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-sm">
+                                    <div class="modal-content border-0 shadow rounded-4">
+                                        <div class="modal-body p-4 text-center">
+                                            <div class="text-danger mb-3" style="font-size: 3rem;"><i class="fas fa-exclamation-circle"></i></div>
+                                            <h5 class="fw-bold">Xác Nhận Xóa?</h5>
+                                            <p class="text-muted small">Bạn có chắc muốn xóa khách hàng <strong>{{ c.name }}</strong>?</p>
+                                            <div class="d-flex gap-2 mt-4">
+                                                <button type="button" class="btn btn-light flex-grow-1 rounded-3" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('customers.delete', id=c.id) }}" method="POST" class="flex-grow-1">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger w-100 rounded-3">Đồng ý</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fas fa-users-slash fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0">Không tìm thấy khách hàng nào.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white border-0 py-3 px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Hiển thị {{ customers | length }} / {{ pagination.total }} khách hàng</span>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if pagination.has_prev %}
+                    <li class="page-item"><a class="page-link rounded-pill px-3 me-1" href="?page={{ pagination.prev_num }}&q={{ q }}">Trước</a></li>
+                    {% endif %}
+                    
+                    {% for p in pagination.iter_pages() %}
+                        {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link rounded-pill mx-1" href="?page={{ p }}&q={{ q }}">{{ p }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link border-0">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item"><a class="page-link rounded-pill px-3 ms-1" href="?page={{ pagination.next_num }}&q={{ q }}">Tiếp</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

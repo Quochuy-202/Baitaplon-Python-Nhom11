@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set title = "Thêm Nhân Viên" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <h4 class="fw-bold mb-4 text-center">Thêm Nhân Viên Mới</h4>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Họ và tên</label>
+                        <input type="text" name="full_name" class="form-control rounded-3" placeholder="Nguyễn Văn A" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Tên đăng nhập</label>
+                        <input type="text" name="username" class="form-control rounded-3" placeholder="user123" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Mật khẩu</label>
+                        <input type="text" name="password" class="form-control rounded-3" placeholder="Nhập mật khẩu..." required>
+                        <div class="form-text text-warning small"><i class="fas fa-info-circle me-1"></i>Mật khẩu sẽ được lưu dạng văn bản thuần.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Vai trò</label>
+                        <select name="role_id" class="form-select rounded-3">
+                            {% for r in roles %}
+                            <option value="{{ r.id }}">{{ r.name | upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">TẠO TÀI KHOẢN</button>
+                    <a href="{{ url_for('settings.index') }}" class="btn btn-light w-100 rounded-pill py-2 mt-2">Quay lại</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

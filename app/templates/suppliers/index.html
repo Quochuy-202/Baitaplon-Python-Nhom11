@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% set title = "Danh Sách Nhà Cung Cấp" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-truck me-2 text-primary"></i>Nhà Cung Cấp</h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Nhà cung cấp</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{{ url_for('suppliers.create') }}" class="btn btn-primary fw-bold rounded-pill px-4">
+        <i class="fas fa-plus me-2"></i>Thêm Nhà Cung Cấp
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="card border-0 shadow-sm mb-4 rounded-4">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0 rounded-end-pill py-2" 
+                           placeholder="Tìm theo tên nhà cung cấp, số điện thoại..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4" style="width: 50px;">ID</th>
+                        <th>Nhà Cung Cấp</th>
+                        <th>Người Liên Hệ</th>
+                        <th>Thông Tin Liên Hệ</th>
+                        <th class="text-end">Công Nợ NCC</th>
+                        <th class="text-center" style="width: 120px;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in suppliers %}
+                    <tr>
+                        <td class="ps-4 text-muted small">#{{ s.id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ s.name }}</div>
+                            <div class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ s.address | truncate(40) or '---' }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ s.contact_person or '---' }}</div>
+                        </td>
+                        <td>
+                            <div><i class="fas fa-phone-alt me-2 text-muted small"></i>{{ s.phone or '---' }}</div>
+                            <div class="text-muted small"><i class="fas fa-envelope me-2 text-muted small"></i>{{ s.email or '---' }}</div>
+                        </td>
+                        <td class="text-end fw-bold {% if s.debt_amount > 0 %}text-warning{% else %}text-muted{% endif %}">
+                            {{ "{:,.0f}".format(s.debt_amount) }} ₫
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ url_for('suppliers.edit', id=s.id) }}" class="btn btn-sm btn-light border rounded-pill" title="Sửa">
+                                    <i class="fas fa-edit text-primary"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill" 
+                                        title="Xóa" data-bs-toggle="modal" data-bs-target="#deleteModal{{ s.id }}">
+                                    <i class="fas fa-trash text-danger"></i>
+                                </button>
+                            </div>
+
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-sm">
+                                    <div class="modal-content border-0 shadow rounded-4">
+                                        <div class="modal-body p-4 text-center">
+                                            <div class="text-danger mb-3" style="font-size: 3rem;"><i class="fas fa-exclamation-circle"></i></div>
+                                            <h5 class="fw-bold">Xác Nhận Xóa?</h5>
+                                            <p class="text-muted small">Bạn có chắc muốn xóa nhà cung cấp <strong>{{ s.name }}</strong>?</p>
+                                            <div class="d-flex gap-2 mt-4">
+                                                <button type="button" class="btn btn-light flex-grow-1 rounded-3" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('suppliers.delete', id=s.id) }}" method="POST" class="flex-grow-1">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger w-100 rounded-3">Đồng ý</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-truck-loading fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0">Chưa có nhà cung cấp nào.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

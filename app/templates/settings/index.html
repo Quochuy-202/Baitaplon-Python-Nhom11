@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set title = "Cài Đặt Hệ Thống" %}
+
+{% block content %}
+<div class="mb-4">
+    <h4 class="fw-bold mb-1"><i class="fas fa-cog me-2 text-primary"></i>Cài Đặt Hệ Thống</h4>
+    <p class="text-muted small">Quản lý cấu hình cửa hàng và tài khoản nhân viên.</p>
+</div>
+
+<div class="row g-4">
+    <!-- Store Info Settings -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-4 border-bottom pb-2">Thông Tin Cửa Hàng</h6>
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Tên cửa hàng</label>
+                        <input type="text" class="form-control rounded-3" value="{{ store_name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Địa chỉ</label>
+                        <input type="text" class="form-control rounded-3" value="{{ store_address }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Số điện thoại</label>
+                        <input type="text" class="form-control rounded-3" value="{{ store_phone }}" readonly>
+                    </div>
+                    <p class="text-muted small mt-3 italic">* Các thông tin này được cấu hình trong file .env</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                    <h6 class="fw-bold mb-0">Quản Lý Nhân Viên</h6>
+                    <a href="{{ url_for('settings.create_user') }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="fas fa-plus me-1"></i>Thêm
+                    </a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="small fw-bold">Tên Nhân Viên</th>
+                                <th class="small fw-bold">Tài Khoản</th>
+                                <th class="small fw-bold">Quyền</th>
+                                <th class="small fw-bold">Mật Khẩu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold small">{{ u.full_name or 'Chưa cập nhật' }}</div>
+                                </td>
+                                <td class="small">{{ u.username }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if u.role.name == 'admin' else 'info' }}-subtle text-{{ 'primary' if u.role.name == 'admin' else 'info' }} rounded-pill px-2">
+                                        {{ u.role.name | upper }}
+                                    </span>
+                                </td>
+                                <td class="small"><code>{{ u.password }}</code></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

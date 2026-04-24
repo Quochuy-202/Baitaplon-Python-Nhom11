@@ -130,82 +130,97 @@
             <div class="card-body px-4 pb-4">
                 {% if top_products %}
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Tên Sản Phẩm</th>
-                                <th class="text-end">Số Lượng Bán</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for rank, (name, qty) in enumerate(top_products, 1) %}
-                            <tr>
-                                <td>
-                                    {% if rank == 1 %}<span class="badge bg-warning text-dark">🥇 {{ rank }}</span>
-                                    {% elif rank == 2 %}<span class="badge bg-secondary">🥈 {{ rank }}</span>
-                                    {% elif rank == 3 %}<span class="badge bg-danger">🥉 {{ rank }}</span>
-                                    {% else %}<span class="text-muted">{{ rank }}</span>
-                                    {% endif %}
-                                </td>
-                                <td class="fw-semibold">{{ name }}</td>
-                                <td class="text-end"><span class="badge bg-primary rounded-pill">{{ qty }}</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tên Sản Phẩm</th>
+                                        <th class="text-end">Số Lượng Bán</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for name, qty in top_products %}
+                                    <tr>
+                                        <td>
+                                            {% if loop.index == 1 %}<span class="badge bg-warning text-dark">🥇 {{ loop.index }}</span>
+                                            {% elif loop.index == 2 %}<span class="badge bg-secondary">🥈 {{ loop.index }}</span>
+                                            {% elif loop.index == 3 %}<span class="badge bg-danger">🥉 {{ loop.index }}</span>
+                                            {% else %}<span class="text-muted">{{ loop.index }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="fw-semibold">{{ name }}</td>
+                                        <td class="text-end"><span class="badge bg-primary rounded-pill">{{ qty }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
+                            <p>Chưa có dữ liệu bán hàng tháng này.</p>
+                            <a href="{{ url_for('pos.index') }}" class="btn btn-primary btn-sm">Bắt đầu bán hàng</a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% else %}
-                <div class="text-center py-4 text-muted">
-                    <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
-                    <p>Chưa có dữ liệu bán hàng tháng này.</p>
-                    <a href="{{ url_for('pos.index') }}" class="btn btn-primary btn-sm">Bắt đầu bán hàng</a>
-                </div>
-                {% endif %}
             </div>
         </div>
-    </div>
-</div>
-{% endblock %}
+        {% endblock %}
 
-{% block scripts %}
-<script>
-    const ctx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: {{ dates | tojson }},
-            datasets: [{
-                label: 'Doanh thu (₫)',
-                data: {{ revenues | tojson }},
-                backgroundColor: 'rgba(30, 136, 229, 0.15)',
-                borderColor: '#1E88E5',
-                borderWidth: 2,
-                borderRadius: 6,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => new Intl.NumberFormat('vi-VN').format(ctx.raw) + ' ₫'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    ticks: {
-                        callback: v => new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(v) + '₫'
+        {% block scripts %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const ctx = document.getElementById('revenueChart');
+                if (!ctx) return;
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: {{ dates | tojson | safe }},
+                        datasets: [{
+                            label: 'Doanh thu (₫)',
+                            data: {{ revenues | tojson | safe }},
+                            backgroundColor: 'rgba(30, 136, 229, 0.2)',
+                            borderColor: '#1E88E5',
+                            borderWidth: 2,
+                            borderRadius: 5,
+                            barThickness: 25,
+                        }]
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
-                },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-</script>
-{% endblock %}
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                padding: 10,
+                                callbacks: {
+                                    label: ctx => 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(ctx.raw) + ' ₫'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: { size: 10 },
+                                    callback: v => new Intl.NumberFormat('vi-VN', { notation: 'compact' }).format(v) + '₫'
+                                },
+                                grid: { color: 'rgba(0,0,0,0.05)' }
+                            },
+                            x: { 
+                                grid: { display: false },
+                                ticks: {
+                                    display: true,
+                                    color: '#333',
+                                    font: { size: 11, weight: 'bold' }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+        {% endblock %}

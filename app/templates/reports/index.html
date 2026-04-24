@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% set title = "Báo Cáo & Thống Kê" %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 1600px;">
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1"><i class="fas fa-chart-line me-2 text-primary"></i>Báo Cáo & Thống Kê</h4>
+        <p class="text-muted small">Theo dõi hiệu quả kinh doanh của cửa hàng qua các con số trực quan.</p>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-white bg-opacity-25 p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-hand-holding-usd fs-5"></i>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill small">Hôm nay</span>
+                    </div>
+                    <h6 class="mb-1 opacity-75 small">Doanh Thu Ngày</h6>
+                    <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(today_revenue) }} ₫</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-success text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-white bg-opacity-25 p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-calendar-check fs-5"></i>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill small">Tháng này</span>
+                    </div>
+                    <h6 class="mb-1 opacity-75 small">Doanh Thu Tháng</h6>
+                    <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(month_revenue) }} ₫</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-info text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-white bg-opacity-25 p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shopping-cart fs-5"></i>
+                        </div>
+                    </div>
+                    <h6 class="mb-1 opacity-75 small">Số Đơn Hàng Hôm Nay</h6>
+                    <h4 class="fw-bold mb-0">{{ today_orders }} đơn</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-warning text-white h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-white bg-opacity-25 p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-wallet fs-5"></i>
+                        </div>
+                    </div>
+                    <h6 class="mb-1 opacity-75 small">Lợi Nhuận Hôm Nay</h6>
+                    <h4 class="fw-bold mb-0">{{ "{:,.0f}".format(profit_today) }} ₫</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Revenue Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-4"><i class="fas fa-chart-area me-2 text-primary"></i>Biểu Đồ Doanh Thu 7 Ngày Gần Nhất</h6>
+                    <div style="height: 350px; position: relative;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-4"><i class="fas fa-crown me-2 text-warning"></i>Sản Phẩm Bán Chạy</h6>
+                    <div class="list-group list-group-flush">
+                        {% for name, qty in top_products %}
+                        <div class="list-group-item px-0 border-0 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-3 bg-light p-2 me-3 text-center" style="width: 45px;">
+                                    <span class="fw-bold text-primary">{{ loop.index }}</span>
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-bold small text-dark text-truncate">{{ name }}</div>
+                                    <div class="text-muted small">Đã bán: {{ qty }} cái</div>
+                                </div>
+                                <div class="ms-auto text-success small fw-bold text-nowrap">
+                                    <i class="fas fa-caret-up me-1"></i>Hot
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-center text-muted py-5">Chưa có dữ liệu bán hàng.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('revenueChart');
+        if (!ctx) return;
+
+        // Xóa biểu đồ cũ nếu tồn tại
+        const existingChart = Chart.getChart("revenueChart");
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_labels | tojson | safe }},
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: {{ chart_data | tojson | safe }},
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderColor: '#0d6efd',
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: '#0d6efd',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        bottom: 20 // Tạo khoảng trống cho nhãn trục X
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 14 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)',
+                        },
+                        ticks: {
+                            font: { size: 11, family: "'Be Vietnam Pro', sans-serif" },
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
+                            }
+                        }
+                    },
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            display: true,
+                            color: '#333',
+                            font: {
+                                size: 12,
+                                weight: '600',
+                                family: "'Be Vietnam Pro', sans-serif"
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

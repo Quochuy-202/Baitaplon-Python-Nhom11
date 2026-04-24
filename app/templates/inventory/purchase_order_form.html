@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% set title = "Tạo Phiếu Nhập Hàng" %}
+
+{% block content %}
+<div class="mb-4">
+    <h4 class="fw-bold mb-1"><i class="fas fa-plus-circle me-2 text-primary"></i>Tạo Phiếu Nhập Hàng</h4>
+    <p class="text-muted small">Nhập hàng từ nhà cung cấp để cập nhật tồn kho và công nợ.</p>
+</div>
+
+<form method="POST" id="purchase-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="row g-4">
+        <!-- Thông tin chung -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3 border-bottom pb-2">Thông tin chung</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nhà cung cấp</label>
+                        <select name="supplier_id" class="form-select rounded-3" required>
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                            {% for s in suppliers %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Ghi chú</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
+                    </div>
+
+                    <div class="bg-light p-3 rounded-3 mt-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Tổng tiền hàng:</span>
+                            <span id="total-amount-display" class="fw-bold">0 ₫</span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Thanh toán cho NCC</label>
+                            <div class="input-group">
+                                <input type="number" name="paid_amount" id="paid-amount" class="form-control" value="0" min="0">
+                                <span class="input-group-text">₫</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top">
+                            <span class="text-muted small">Tính vào công nợ:</span>
+                            <span id="debt-amount-display" class="fw-bold text-danger">0 ₫</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold mt-4">
+                        <i class="fas fa-save me-2"></i>HOÀN TẤT NHẬP HÀNG
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chi tiết sản phẩm -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3 border-bottom pb-2">Danh sách sản phẩm nhập</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Thêm sản phẩm</label>
+                        <div class="input-group">
+                            <select id="product-search" class="form-select rounded-start-3">
+                                <option value="">-- Chọn sản phẩm để thêm --</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-price="{{ p.cost_price or 0 }}" data-name="{{ p.name }}">
+                                    {{ p.name }} (SKU: {{ p.sku }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-outline-primary rounded-end-3" onclick="addItem()">
+                                <i class="fas fa-plus"></i> Thêm
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle" id="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th style="width: 120px;">Số lượng</th>
+                                    <th style="width: 150px;">Đơn giá nhập</th>
+                                    <th class="text-end" style="width: 150px;">Thành tiền</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-body">
+                                <!-- Items row here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="no-items" class="text-center py-4 text-muted">
+                        <p class="mb-0">Chưa có sản phẩm nào được chọn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let totalAmount = 0;
+
+    function addItem() {
+        const select = document.getElementById('product-search');
+        if (!select.value) return;
+
+        const option = select.options[select.selectedIndex];
+        const id = select.value;
+        const name = option.dataset.name;
+        const price = option.dataset.price;
+
+        // Check if exists
+        const existingRow = document.querySelector(`tr[data-id="${id}"]`);
+        if (existingRow) {
+            const qtyInput = existingRow.querySelector('.qty-input');
+            qtyInput.value = parseInt(qtyInput.value) + 1;
+            updateRowTotal(existingRow);
+            return;
+        }
+
+        const tbody = document.getElementById('items-body');
+        const row = document.createElement('tr');
+        row.dataset.id = id;
+        row.innerHTML = `
+            <td>
+                <input type="hidden" name="product_id[]" value="${id}">
+                <div class="fw-bold">${name}</div>
+            </td>
+            <td>
+                <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" value="1" min="1" oninput="updateRowTotal(this.closest('tr'))">
+            </td>
+            <td>
+                <input type="number" name="price[]" class="form-control form-control-sm price-input" value="${price}" min="0" oninput="updateRowTotal(this.closest('tr'))">
+            </td>
+            <td class="text-end fw-bold row-total">
+                ${formatVND(price)}
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove(); calculateGrandTotal();">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        document.getElementById('no-items').style.display = 'none';
+        calculateGrandTotal();
+        select.value = '';
+    }
+
+    function updateRowTotal(row) {
+        const qty = row.querySelector('.qty-input').value;
+        const price = row.querySelector('.price-input').value;
+        const total = qty * price;
+        row.querySelector('.row-total').textContent = formatVND(total);
+        calculateGrandTotal();
+    }
+
+    function calculateGrandTotal() {
+        const rowTotals = document.querySelectorAll('.qty-input');
+        const rowPrices = document.querySelectorAll('.price-input');
+        let grandTotal = 0;
+        
+        for (let i = 0; i < rowTotals.length; i++) {
+            grandTotal += rowTotals[i].value * rowPrices[i].value;
+        }
+        
+        totalAmount = grandTotal;
+        document.getElementById('total-amount-display').textContent = formatVND(grandTotal);
+        calculateDebt();
+    }
+
+    function calculateDebt() {
+        const paid = document.getElementById('paid-amount').value || 0;
+        const debt = Math.max(0, totalAmount - paid);
+        document.getElementById('debt-amount-display').textContent = formatVND(debt);
+    }
+
+    document.getElementById('paid-amount').addEventListener('input', calculateDebt);
+
+    function formatVND(num) {
+        return new Intl.NumberFormat('vi-VN').format(num) + ' ₫';
+    }
+</script>
+{% endblock %}

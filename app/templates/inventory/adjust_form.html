@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% set title = "Điều Chỉnh Kho" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1"><i class="fas fa-exchange-alt me-2 text-primary"></i>Điều Chỉnh Kho</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('inventory.index') }}">Kho bãi</a></li>
+                        <li class="breadcrumb-item active">Điều chỉnh</li>
+                    </ol>
+                </nav>
+            </div>
+            <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-info border-0 rounded-4 mb-4 small">
+                    <i class="fas fa-info-circle me-2"></i>Chức năng này dùng để điều chỉnh số lượng tồn kho thủ công (ví dụ: hàng hư hỏng, kiểm kho định kỳ, hàng tặng...).
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Chọn sản phẩm cần điều chỉnh</label>
+                        {{ form.product_id(class="form-select rounded-3 py-2") }}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Loại điều chỉnh</label>
+                            {{ form.movement_type(class="form-select rounded-3 py-2") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Số lượng thay đổi</label>
+                            {{ form.quantity(class="form-control rounded-3 py-2", type="number", min="1") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Lý do điều chỉnh <span class="text-danger">*</span></label>
+                        {{ form.notes(class="form-control rounded-3 py-2", rows="3", placeholder="Nhập lý do chi tiết...") }}
+                    </div>
+
+                    <div class="mt-5">
+                        {{ form.submit(class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
