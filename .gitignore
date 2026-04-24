@@ -20,3 +20,15 @@ vanphongpham_db.sqlite3
 .idea/
 *.swp
 *.swo
+
+# User requested ignores
+.env.example
+config.py
+push_to_github.bat
+requirements.txt
+run.py
+scratch_delete.py
+seed_data.py
+setup_db.py
+update_categories.py
+
